@@ -65,10 +65,7 @@ QueueHandle_t rx_queue;
 #define BTN_PRESSED_Pos                         0U
 #define BTN_PRESSED_Msk                         (1UL << BTN_PRESSED_Pos)
 
-#define TRIG_PIN GPIO_PIN_12
-#define TRIG_PORT GPIOA
-#define ECHO_PIN GPIO_PIN_11
-#define ECHO_PORT GPIOA
+
 uint32_t pMillis;
 uint32_t Value1 = 0;
 uint32_t Value2 = 0;
@@ -91,12 +88,8 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
-//void blinkTaskFcn(void * argument);
-//void task_UltrasonicSensor(void * argument);
 void task_PotentiometerSensor(void * argument);
-//void cli(void * vParam);
-//void trig_toggle_task( void * pvParameters );
-//void echo_read_task(void *pvParameters);
+
 /* Declare a variable to hold the created event group. */
 static        EventGroupHandle_t xFlagsEventGroup;
 
@@ -215,33 +208,6 @@ void ldr(void *vParam) {
 	}
 }
 
-/*
-void cli(void * vParam)
-	{
-	uint8_t caracter;
-	while(1)
-	{
-		sendString("aaa", USART_1);
-		readchar(USART_2);
-		caracter = readchar(USART_2);
-		if(caracter == 'h' || caracter == 'H'){
-
-			char *texto ;
-
-			texto = (char*)malloc(13 * sizeof(char));
-
-			int Distance = 10;
-
-			sprintf(texto,"%s=%d\r\n","PotentiometerSensor",Distance);
-
-			sendString(texto, USART_1);
-
-			 //sendString("Teste Serial\r\n", USART_1);
-		//}
-	//////IMPORTANTE: Aqui voce pode implementar o tratamento de novos comandos
-	}
-}
-*/
 
 //Rotina de tratamento de interrupcao da USART2
 void USART_2_IRQHandler(void)
@@ -354,16 +320,6 @@ int main(void)
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 
-  //uart_1_mutex = xSemaphoreCreateMutex();
-  //uart_2_mutex = xSemaphoreCreateMutex();
-
-  //xTaskCreate(cli, /* Nome da funcao que contem a task */
-  //			  "cli", /* Nome descritivo */
-  //			  configMINIMAL_STACK_SIZE, /* tamanho da pilha da task */
-  //			  NULL, /* parametro para a task */
-  //			  1, /* nivel de prioridade */
-  //			  NULL); /* ponteiro para o handle da task */
-
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -390,22 +346,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   xFlagsEventGroup = xEventGroupCreate();
   xTaskCreate(potentiometerSensor, "potentiometerSensor", configMINIMAL_STACK_SIZE, NULL, task_PRIO, NULL);
-  //xTaskCreate(echo_read_task, "echo_read_task", configMINIMAL_STACK_SIZE, NULL, task_PRIO, NULL);
-  //xTaskCreate(trig_toggle_task, "trig_toggle_task", configMINIMAL_STACK_SIZE, NULL, task_PRIO, NULL);
   xTaskCreate(ldr, "ldr", configMINIMAL_STACK_SIZE, NULL, 1 , NULL);
-//  xTaskCreate(task_UltrasonicSensor, /* Nome da funcao que executa a task */
-//			  "task_UltrasonicSensor", /* Nome descritivo */
-//			  configMINIMAL_STACK_SIZE, /* tamanho da pilha da task */
-//			  NULL, /* parametro para a task */
-//			  tskIDLE_PRIORITY, /* nivel de prioridade */
-//			  NULL); /* ponteiro para o handle da task */
-
-  //xTaskCreate(blinkTaskFcn, /* Nome da funcao que executa a task */
-//			  "blinkTask", /* Nome descritivo */
-//			  configMINIMAL_STACK_SIZE, /* tamanho da pilha da task */
-//			  NULL, /* parametro para a task */
-//			  tskIDLE_PRIORITY, /* nivel de prioridade */
-//			  NULL); /* ponteiro para o handle da task */
 
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -934,93 +875,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-/*
-void blinkTaskFcn(void * argument)
-{
-	// Infinite loop //
-	for(;;)
-	{
-
-		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-		vTaskDelay(100);
-
-	}
-}
-*/
-
-
-/*
-
-void trig_toggle_task( void * pvParameters )
-{
-	TickType_t last_wake_time;
-	//Set toggle interval to 500ms
-	const TickType_t toggle_interval = 500/portTICK_PERIOD_MS;
-	EventBits_t event_bits;
-	uint8_t toggle_en = 0;
-
-	// Initialize the last_wake_time variable with the current time
-	last_wake_time = xTaskGetTickCount();
-
-	for( ;; )
-	{
-		// Wait for the next cycle.
-		vTaskDelayUntil( &last_wake_time, toggle_interval );
-		//Get the button pressed event bit and clear it.
-		event_bits = xEventGroupClearBits( xFlagsEventGroup,BTN_PRESSED_Msk);
-		if (event_bits & BTN_PRESSED_Msk) {
-			toggle_en = ~toggle_en;
-			// if toggling was enabled then we turn off the LED
-			// if toggling was disabled, then the led was turned off anyway
-			HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
-		}
-		if (toggle_en) {
-			HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);
-			vTaskDelay(10);
-			HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
-		}
-	}
-}
-*/
-
-/*
-void echo_read_task(void *pvParameters)
-{
-	TickType_t last_wake_time;
-	uint8_t curr_state,prev_state = 0; //State for the button
-	//Set toggle interval to 10ms
-	const TickType_t sample_interval = 10/portTICK_PERIOD_MS;
-
-	// Initialize the last_wake_time variable with the current time
-	last_wake_time = xTaskGetTickCount();
-
-	xEventGroupSetBits(xFlagsEventGroup, BTN_PRESSED_Msk);
-
-	for( ;; )
-	{
-		// Wait for the next cycle.
-		vTaskDelayUntil( &last_wake_time, sample_interval );
-		// Get the level on button pin
-		curr_state = HAL_GPIO_ReadPin(ECHO_PORT, ECHO_PIN);
-		if ((curr_state == 1) && (prev_state == 0)) {
-			Value1 = xTaskGetTickCount();
-		}
-		if ((curr_state == 0) && (prev_state == 1)) {
-			Value2 = xTaskGetTickCount();
-
-			Distance = (Value2-Value1)* 0.034/2;
-			char distanceString[8];
-			sprintf(distanceString,"%d\r\n", Distance);
-			sendString(distanceString, USART_1);
-			vTaskDelay(1000);
-
-			xEventGroupSetBits(xFlagsEventGroup, BTN_PRESSED_Msk);
-		}
-		prev_state = curr_state;
-	}
-}
-*/
-
 void user_pwm_setvalue(uint16_t value)
 {
    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3);
@@ -1033,57 +887,6 @@ void user_pwm_setvalue(uint16_t value)
     HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 }
-
-/*
-void task_UltrasonicSensor(void * argument){
-
-	while(1)
-	{
-		HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
-		__HAL_TIM_SET_COUNTER(&htim2, 0);
-		vTaskDelay(10);
-		HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
-
-		pMillis = HAL_GetTick(); // used this to avoid infinite while loop  (for timeout)
-		// wait for the echo pin to go high
-		while (!(HAL_GPIO_ReadPin (ECHO_PORT, ECHO_PIN)) && pMillis + 10 >  HAL_GetTick());
-		Value1 = __HAL_TIM_GET_COUNTER (&htim2);
-
-		pMillis = HAL_GetTick(); // used this to avoid infinite while loop (for timeout)
-		// wait for the echo pin to go low
-		while ((HAL_GPIO_ReadPin (ECHO_PORT, ECHO_PIN)) && pMillis + 50 > HAL_GetTick());
-		Value2 = __HAL_TIM_GET_COUNTER (&htim2);
-
-		Distance = (Value2-Value1)* 0.034/2;
-		char distanceString[8];
-		sprintf(distanceString,"%d\r\n", Distance);
-		sendString(distanceString, USART_1);
-		vTaskDelay(1000);
-		*/
-	/*
-	  if (Distance > 5) {
-
-		  //PotentiometerSensor=6;
-
-          sendString("PotentiometerSensor=6",USART1);
-
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-
-	  } else {
-
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-	  }*/
-
-	  /* solicitar ao semaforo passagem */
-
-      /* envio de informação pelo serial */
-
-      /* liberar o semaforo */
-
-
-	//}
-
-//}
 
 /* USER CODE END 4 */
 
